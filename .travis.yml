@@ -15,7 +15,7 @@ install:
   - conda config --set always_yes yes --set changeps1 no
   - conda update -q conda
   - conda info -a
-  - conda create -q -n test python=$TRAVIS_PYTHON_VERSION scipy numpy pytest pytest-cov coverage sphinx nose
+  - conda create -q -n test python=$TRAVIS_PYTHON_VERSION scipy numpy matplotlib pytest pytest-cov coverage sphinx nose
   - source activate test
   - pip install -U git+https://github.com/jgomezdans/gp_emulator.git
   - pip install -U coveralls
