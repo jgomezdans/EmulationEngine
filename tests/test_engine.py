@@ -67,6 +67,17 @@ def test_kernel_emulators(set_up_atmospheric_class):
     assert len(H) == 2 and np.allclose(H[0], np.ones((100)))  
     assert len(H) == 2 and np.allclose(dH[0], 0.5*np.ones((11,100)))
 
+    # No kernels in gradient, bands 0+1 do gradient, passing only 2 bands
+    kernel_weights = np.ones((3, 2, 100))*0.1
+    gradient_kernel = True
+    bands = [0,1]
+    H, dH = emu.emulator_kernel_atmosphere(kernel_weights, atmosphere, 
+                sza, vza, saa, vaa, elevation, 
+                gradient_kernels=gradient_kernel, bands=bands)
+    assert len(H) == 2 and np.allclose(H[0], np.ones((100)))  
+    assert len(H) == 2 and np.allclose(dH[0], 0.5*np.ones((11,100)))
+
+
     
     with pytest.raises(ValueError):
         # No kernels in gradient, only band 5 (or 4 in python)
@@ -140,10 +151,21 @@ def test_reflectance_emulators(set_up_atmospheric_class):
     assert len(H) == 2 and np.allclose(H[0], np.ones((100)))  
     assert len(H) == 2 and np.allclose(dH[0], 0.5*np.ones((9,100)))
 
+    # No refl in gradient, bands 0+1 do gradient, pass only 2 bands
+    reflectance = np.ones((2,100))*0.1
+    gradient_refl = True
+    bands = [0,1]
+    H, dH = emu.emulator_reflectance_atmosphere(reflectance, atmosphere, 
+                sza, vza, saa, vaa, elevation, 
+                gradient_refl=gradient_refl, bands=bands)
+    assert len(H) == 2 and np.allclose(H[0], np.ones((100)))  
+    assert len(H) == 2 and np.allclose(dH[0], 0.5*np.ones((9,100)))
+
     
     with pytest.raises(ValueError):
         # No kernels in gradient, only band 5 (or 4 in python)
         # ... which doesn't exist
+        reflectance = np.ones((3, 100))*0.1
         gradient_refl = False
         bands = 4
         H, dH = emu.emulator_reflectance_atmosphere(reflectance, atmosphere, 
