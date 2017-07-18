@@ -3,6 +3,26 @@
 An emulation engine for KaFKA. This emulation engine is designed to be useful 
 for the atmospheric correction part.
 """
+
+# KaFKA A fast Kalman filter implementation for raster based datasets.
+# Copyright (c) 2017 J Gomez-Dans. All rights reserved.
+#
+# This file is part of KaFKA.
+#
+# KaFKA is free software: you can redistribute it and/or modify
+# it under the terms of the GNU General Public License as published by
+# the Free Software Foundation, either version 3 of the License, or
+# (at your option) any later version.
+#
+# KaFKA is distributed in the hope that it will be useful,
+# but WITHOUT ANY WARRANTY; without even the implied warranty of
+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+# GNU General Public License for more details.
+#
+# You should have received a copy of the GNU General Public License
+# along with KaFKA.  If not, see <http://www.gnu.org/licenses/>.
+
+
 import os
 import glob
 import sys
@@ -11,6 +31,13 @@ import cPickle
 import numpy as np
 
 import gp_emulator # unnecessary?
+
+
+__author__ = "J Gomez-Dans"
+__copyright__ = "Copyright 2017 J Gomez-Dans"
+__version__ = "1.0 (13.07.2017)"
+__license__ = "GPLv3"
+__email__ = "j.gomez-dans@ucl.ac.uk"
 
 class AtmosphericEmulationEngine(object):
     """An emulation engine for single band atmospheric RT models.
@@ -204,7 +231,7 @@ class AtmosphericEmulationEngine(object):
                     % (self.n_bands, max(the_bands)))
 
             sel_bands = len(the_bands)
-            if reflectance.shape[1] == sel_bands:
+            if reflectance.shape[0] == sel_bands:
                 # We only got passed a subset of the bands
                 is_subset = True
             else:
