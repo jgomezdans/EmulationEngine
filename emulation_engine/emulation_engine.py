@@ -25,12 +25,14 @@ class AtmosphericEmulationEngine(object):
     8. Altitude (in km)
     """
     def __init__ ( self, sensor, emulator_folder):
+        self.sensor = sensor
+        self._locate_emulators(sensor, emulator_folder)
 
     def _locate_emulators(self, sensor, emulator_folder):
         self.emulators = []
         self.emulator_names = []
         files = glob.glob(os.path.join(emulator_folder, 
-                "*%s*.pkl" % sensor)
+                "*%s*.pkl" % sensor))
         files.sort()
         for fich in files:
             emulator_file = os.path.basename(fich)
@@ -68,6 +70,7 @@ class AtmosphericEmulationEngine(object):
         `bands=[3,4,5]`, then `kernel_weights` bands should also be
         ordered as band positions 3, 4 and 5 along the second axis.
         """
+        
         # the controls can be scalars or arrays
         # We convert them to arrays if needed
         sza = np.asarray(sza).reshape(1, -1)[0,:]
@@ -80,20 +83,21 @@ class AtmosphericEmulationEngine(object):
         n_pix2 = atmosphere.shape[1]
         assert n_pix1 == n_pix2  # In reality could check angles and stuff
         n_pix = n_pix1 
-        x = np.zeros((11, n_pix)) # 10 parameters innit?
-        x[3:, :] = np.r_[np.cos(sza)*np.ones(n_pix), 
+        x = np.zeros((8 + 3, n_pix)) # 11 parameters innit?
+        x[3:, :] = np.c_[np.cos(sza)*np.ones(n_pix), 
                          np.cos(vza)*np.ones(n_pix), 
                          saa*np.ones(n_pix), vaa*np.ones(n_pix), 
                          atmosphere[0,:], atmosphere[1,:], atmosphere[2,:], 
-                         elevation*np.ones(n_pix)]
+                         elevation*np.ones(n_pix)].T
+        
         H0 = []
         dH = []
         if bands is None: # Do all bands
             for band in xrange(self.n_bands):
                 emu = self.emulators[band]
-                x[0, :] = kernel_weights[0,band, :] # Iso
-                x[1, :] = kernel_weights[1,band, :] # Vol
-                x[2, :] = kernel_weights[2,band, :] # Geo
+                x[0, :] = kernel_weights[0, band, :] # Iso
+                x[1, :] = kernel_weights[1, band, :] # Vol
+                x[2, :] = kernel_weights[2, band, :] # Geo
                 H0_, dH_ = emu.predict(x, do_unc=False)
                 if not gradient_kernels:
                     dH_ = dH_[3:, :] # Ignore the kernels in the gradient 
@@ -104,6 +108,10 @@ class AtmosphericEmulationEngine(object):
             # This is needed in case we get a single band
             the_bands = (bands,) if not isinstance(bands, 
                                                    (tuple, list)) else bands
+            if max(the_bands) > (self.n_bands-1):
+                raise ValueError("There are only " + 
+                    "%d bands, and you asked for %d position" 
+                    % (self.n_bands, max(the_bands)))
             sel_bands = len(the_bands)
             if kernel_weights.shape[1] == sel_bands:
                 # We only got passed a subset of the bands
