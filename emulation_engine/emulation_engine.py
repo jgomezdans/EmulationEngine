@@ -359,12 +359,12 @@ class RTEmulationEngineSpectral(object):
         #          1.b -> Not spectral (e.g. 2stream)
         if not os.path.exists(emulator_file):
             
-                raise IOError("Emulator file %s doesn't exist" %
+            raise IOError("Emulator file %s doesn't exist" %
                               emulator_file)
-            self.emulator = self._load_emulator(emulator_file)
+        self.emulator = self._load_emulator(emulator_file)
         self.set_srf(srf)
         
-    def self._load_emulator(emulator_file):
+    def _load_emulator(emulator_file):
         self.emulator = gp_emulator.MultivariateEmulator(dump=emulator_file)
         
 
