@@ -39,6 +39,92 @@ __version__ = "1.0 (13.07.2017)"
 __license__ = "GPLv3"
 __email__ = "j.gomez-dans@ucl.ac.uk"
 
+
+def fwd_model ( gp, x, R, band_unc, band_pass, bw ):
+    """
+    A generic forward model using GPs. We pass the gp object as `gp`,
+    the value of the state as `x`, the observations as `R`, observational
+    uncertainties per band as `band_unc`, and spectral properties of 
+    bands as `band_pass` and `bw`.
+    
+    Returns
+    -------
+    
+    The cost associated with x, and the partial derivatives.
+    
+    """
+    
+    f, g = gp.predict ( np.atleast_2d( x ) )
+    cost = 0
+    der_cost = []
+    fwd_model_obs = []
+    gradient = []
+    for i in xrange( len(band_pass) ):
+        d = f[band_pass[i]].sum()/bw[i] - R[i]
+        fwd_model_obs.append ( f[band_pass[i]].sum()/bw[i] )
+        gradient.append ( g[:, band_pass[i] ]/(bw[i]) )
+        derivs = d*g[:, band_pass[i] ]/(bw[i]*(band_unc[i]**2))
+        #derivs = d*g[:, band_pass[i] ]/((band_unc[i]**2))
+        cost += 0.5*np.sum(d*d)/(band_unc[i])**2
+        der_cost.append ( np.array(derivs.sum( axis=1)).squeeze() )
+    
+    return cost, np.array( der_cost ).squeeze().sum(axis=0), fwd_model_obs, gradient
+
+
+def create_inverse_emulators ( original_emulator, band_pass, sel_par ):
+    """
+    This function takes a multivariable output trained emulator
+    and "retrains it" to take input reflectances and report a
+    prediction of single input parameters (i.e., regression from
+    reflectance/radiance to state). This is a useful starting 
+    point for spatial problems. Maybe.
+    
+    Parameters
+    ------------
+    original_emulator: emulator
+        An emulator (type gp_emulator.GaussianProcess)
+    band_pass: array
+        A 2d bandpass array (nbands, nfreq). Logical type
+    sel_par: list
+        A list indicating the positions of the parameters that will 
+        be used in the inverse emulator.
+    """
+    
+    # For simplicity, let's get the training data out of the emulator
+    X = original_emulator.X_train*1.
+    y = original_emulator.y_train*1.
+    # Apply band pass functions here...
+    n_bands = band_pass.shape[0]
+    xx = np.array( [ X[:, band_pass[i,:]].sum(axis=1)/ \
+        (1.*band_pass[i,:].sum()) \
+        for i in xrange( n_bands ) ] )
+
+    # A container to store the emulators
+    gps = []
+    for  param in sel_par:
+        gp = GaussianProcess ( xx.T, y[:, i] )
+        gp.learn_hyperparameters( n_tries = 3 )
+        gps.append(gp)
+    return gps
+    
+def perband_emulators ( emulators, band_pass ):
+    """This function creates per band emulators from the full-spectrum
+    emulator. Should be faster in many cases"""
+    
+    n_bands = band_pass.shape[0]
+    x_train_pband = [ emulators.X_train[:,band_pass[i,:]].mean(axis=1) \
+        for i in xrange( n_bands ) ]
+    x_train_pband = np.array ( x_train_pband )
+    emus = []
+    for i in xrange( n_bands ):
+        gp = GaussianProcess ( emulators.y_train[:]*1, \
+                x_train_pband[i,:] )
+        gp.learn_hyperparameters ( n_tries=5 )
+        emus.append ( gp )
+    return emus
+
+
+
 class AtmosphericEmulationEngine(object):
     """An emulation engine for single band atmospheric RT models.
     For reference, the ordering of the emulator parameters is
@@ -251,7 +337,81 @@ class AtmosphericEmulationEngine(object):
             
             
             
+class RTEmulationEngine(object):
+    """A class to load up single band emulators and use them.
+    NOTE that in some cases you might want to override the __init__
+    method and just pass the emulators themselves. The `predict`
+    method only requires `self.n_bands` and `self.emulators` (a
+    list with length `self.n_bands`) to work."""
+    def __init__ (self, sensor, model, emu_folder):
+        """Locates emulators for a particular model and emulator.
+        Currently based on filename patterns, in the future a better
+        approach will be to fish the data from a database."""
+        
+        self._locate_emulators( model, sensor, emulator_folder)
+
+    def _locate_emulators(self, model, sensor, emulator_folder):
+        self.emulators = []
+        self.emulator_names = []
+        files = glob.glob(os.path.join(emulator_folder, 
+                "%s*%s*.pkl" % (model, sensor)))
+        files.sort()
+        for fich in files:
+            emulator_file = os.path.basename(fich)
+            # Create an emulator label (e.g. band name)
+            self.emulator_names = emulator_file
+            self.emulators.append ( cPickle.load(open(fich, 'r')))
+            log.info("Found file %s, storing as %s" %
+                        fich, emulator_file)
+        self.n_bands = len(self.emulators)
+        
+    def predict(self, x):
+        """A simple multiband predict method. Returns prediction of
+        model values and approximate gradient. Note that `x` input
+        has to be in the same order as expected by emulator.
+        """
+        H0 = []
+        dH = []
+        # In here, x is the state for all samples
+        for band in xrange(self.n_bands):
+            H0_, dH_ = self.emulators[band].predict (x, do_unc=False)
+            H0.append(H0_)
+            dH.append(dH)
+        return np.array(H0).squeeze(), np.array(dH).squeeze()
+        
+        
+        
+        
+class RTEmulationEngineSpectral(object):
+    """A standard emulation engine for a spectral RT model."""
+    def __init__ (self, emulator_file, srf):
+        # Use case #1: an emulator file is given and loaded.
+        # Options: 1.a -> Spectral emulator
+        #          1.b -> Not spectral (e.g. 2stream)
+        if not os.path.exists(emulator_file):
             
+                raise IOError("Emulator file %s doesn't exist" %
+                              emulator_file)
+            self.emulator = self._load_emulator(emulator_file)
+        self.set_srf(srf)
         
+    def self._load_emulator(emulator_file):
+        self.emulator = gp_emulator.MultivariateEmulator(dump=emulator_file)
         
+
+    
+    def set_srf(self, srf):
+        self.n_bands = len(srf)
+        self.srf = srf
+    
+    def predict(self, x):
         
+        f, g = self.emulator.predict ( np.atleast_2d( x ) )
+        fwd_model_obs = []
+        gradient = []
+        for i in xrange( self.n_bands ):
+            d = f*self.srf[i]/(self.srf[i].sum())
+            grad = g*self.srf[i][None, :]/(self.srf[i].sum())
+        fwd_model_obs.append ( d)
+        gradient.append ( grad)
+        return np.array(fwd_model_obs).squeeze(), np.array(gradient).squeeze()
