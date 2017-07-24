@@ -40,37 +40,6 @@ __license__ = "GPLv3"
 __email__ = "j.gomez-dans@ucl.ac.uk"
 
 
-def fwd_model ( gp, x, R, band_unc, band_pass, bw ):
-    """
-    A generic forward model using GPs. We pass the gp object as `gp`,
-    the value of the state as `x`, the observations as `R`, observational
-    uncertainties per band as `band_unc`, and spectral properties of 
-    bands as `band_pass` and `bw`.
-    
-    Returns
-    -------
-    
-    The cost associated with x, and the partial derivatives.
-    
-    """
-    
-    f, g = gp.predict ( np.atleast_2d( x ) )
-    cost = 0
-    der_cost = []
-    fwd_model_obs = []
-    gradient = []
-    for i in xrange( len(band_pass) ):
-        d = f[band_pass[i]].sum()/bw[i] - R[i]
-        fwd_model_obs.append ( f[band_pass[i]].sum()/bw[i] )
-        gradient.append ( g[:, band_pass[i] ]/(bw[i]) )
-        derivs = d*g[:, band_pass[i] ]/(bw[i]*(band_unc[i]**2))
-        #derivs = d*g[:, band_pass[i] ]/((band_unc[i]**2))
-        cost += 0.5*np.sum(d*d)/(band_unc[i])**2
-        der_cost.append ( np.array(derivs.sum( axis=1)).squeeze() )
-    
-    return cost, np.array( der_cost ).squeeze().sum(axis=0), fwd_model_obs, gradient
-
-
 def create_inverse_emulators ( original_emulator, band_pass, sel_par ):
     """
     This function takes a multivariable output trained emulator
