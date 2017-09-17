@@ -27,7 +27,7 @@ import os
 import glob
 import sys
 import cPickle
-
+import logging as log
 import numpy as np
 
 import gp_emulator # unnecessary?
@@ -331,7 +331,7 @@ class RTEmulationEngine(object):
             self.emulator_names = emulator_file
             self.emulators.append ( cPickle.load(open(fich, 'r')))
             log.info("Found file %s, storing as %s" %
-                        fich, emulator_file)
+                        (fich, emulator_file))
         self.n_bands = len(self.emulators)
         
     def predict(self, x):
