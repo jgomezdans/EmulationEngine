@@ -126,6 +126,19 @@ class AtmosphericEmulationEngine(object):
         self.emulators = np.array(self.emulators).ravel()
         self.n_bands = len(self.emulators)
 
+        def _extract_angles(self, angles):
+            """A method that copes with different ways the user has to
+            provide angles. This method should be able to cope with either
+            (i) a single scalar angle, (ii) a 2D array of angles and (iii)
+            either a scalar or 2D array of angles per band."""
+            
+            if type(angles) == list:
+                temp = [np.asarray(x).reshape(1, -1)[0,:] for x in angles]
+                angles = temp
+            else:
+                angles = np.asarray(angles).reshape(1, -1)[0,:]
+        return angles
+
     def emulator_kernel_atmosphere(self, kernel_weights, atmosphere, 
                 sza, vza, saa, vaa, elevation, 
                 gradient_kernels=True, bands=None):
@@ -156,27 +169,10 @@ class AtmosphericEmulationEngine(object):
         
         # the controls can be scalars or arrays
         # We convert them to arrays if needed
-        try:
-            if len(sza) == self.n_bands:
-                temp = [np.asarray(x).reshape(1, -1)[0,:] for x in sza]
-                sza = temp
-                temp = [np.asarray(x).reshape(1, -1)[0,:] for x in saa]
-                saa = temp
-                temp = [np.asarray(x).reshape(1, -1)[0,:] for x in vza]
-                vza = temp
-                temp = [np.asarray(x).reshape(1, -1)[0,:] for x in vaa]
-                vaa = temp
-            else:
-                sza = np.asarray(sza).reshape(1, -1)[0,:]
-                vza = np.asarray(vza).reshape(1, -1)[0,:]
-                saa = np.asarray(saa).reshape(1, -1)[0,:]
-                vaa = np.asarray(vaa).reshape(1, -1)[0,:]
-        except TypeError:
-            sza = np.asarray(sza).reshape(1, -1)[0,:]
-            vza = np.asarray(vza).reshape(1, -1)[0,:]
-            saa = np.asarray(saa).reshape(1, -1)[0,:]
-            vaa = np.asarray(vaa).reshape(1, -1)[0,:]
-
+        sza = self._extract_angles(sza)
+        saa = self._extract_angles(saa)
+        vza = self._extract_angles(vza)
+        vaa = self._extract_angles(vaa)
         elevation = np.asarray(elevation).reshape(1, -1)[0,:]
         # the mother of all arrays will be 3*nbands+3+4
         n_pix1 = kernel_weights.shape[2]
@@ -266,26 +262,11 @@ class AtmosphericEmulationEngine(object):
         """
         # the controls can be scalars or arrays
         # We convert them to arrays if needed
-        try:
-            if len(sza) == self.n_bands:
-                temp = [np.asarray(x).reshape(1, -1)[0,:] for x in sza]
-                sza = temp
-                temp = [np.asarray(x).reshape(1, -1)[0,:] for x in saa]
-                saa = temp
-                temp = [np.asarray(x).reshape(1, -1)[0,:] for x in vza]
-                vza = temp
-                temp = [np.asarray(x).reshape(1, -1)[0,:] for x in vaa]
-                vaa = temp
-            else:
-                sza = np.asarray(sza).reshape(1, -1)[0,:]
-                vza = np.asarray(vza).reshape(1, -1)[0,:]
-                saa = np.asarray(saa).reshape(1, -1)[0,:]
-                vaa = np.asarray(vaa).reshape(1, -1)[0,:]
-        except TypeError:
-            sza = np.asarray(sza).reshape(1, -1)[0,:]
-            vza = np.asarray(vza).reshape(1, -1)[0,:]
-            saa = np.asarray(saa).reshape(1, -1)[0,:]
-            vaa = np.asarray(vaa).reshape(1, -1)[0,:]
+
+        sza = self._extract_angles(sza)
+        saa = self._extract_angles(saa)
+        vza = self._extract_angles(vza)
+        vaa = self._extract_angles(vaa)
 
         elevation = np.asarray(elevation).reshape(1, -1)[0,:]
         # the mother of all arrays will be 3*nbands+3+4
