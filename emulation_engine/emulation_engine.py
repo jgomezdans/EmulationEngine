@@ -156,10 +156,27 @@ class AtmosphericEmulationEngine(object):
         
         # the controls can be scalars or arrays
         # We convert them to arrays if needed
-        sza = np.asarray(sza).reshape(1, -1)[0,:]
-        vza = np.asarray(vza).reshape(1, -1)[0,:]
-        saa = np.asarray(saa).reshape(1, -1)[0,:]
-        vaa = np.asarray(vaa).reshape(1, -1)[0,:]
+        try:
+            if len(sza) == self.n_bands:
+                temp = [np.asarray(x).reshape(1, -1)[0,:] for x in sza]
+                sza = temp
+                temp = [np.asarray(x).reshape(1, -1)[0,:] for x in saa]
+                saa = temp
+                temp = [np.asarray(x).reshape(1, -1)[0,:] for x in vza]
+                vza = temp
+                temp = [np.asarray(x).reshape(1, -1)[0,:] for x in vaa]
+                vaa = temp
+            else:
+                sza = np.asarray(sza).reshape(1, -1)[0,:]
+                vza = np.asarray(vza).reshape(1, -1)[0,:]
+                saa = np.asarray(saa).reshape(1, -1)[0,:]
+                vaa = np.asarray(vaa).reshape(1, -1)[0,:]
+        except TypeError:
+            sza = np.asarray(sza).reshape(1, -1)[0,:]
+            vza = np.asarray(vza).reshape(1, -1)[0,:]
+            saa = np.asarray(saa).reshape(1, -1)[0,:]
+            vaa = np.asarray(vaa).reshape(1, -1)[0,:]
+
         elevation = np.asarray(elevation).reshape(1, -1)[0,:]
         # the mother of all arrays will be 3*nbands+3+4
         n_pix1 = kernel_weights.shape[2]
@@ -249,11 +266,28 @@ class AtmosphericEmulationEngine(object):
         """
         # the controls can be scalars or arrays
         # We convert them to arrays if needed
-        sza = np.asarray(sza).reshape(1, -1)[0,:]
-        vza = np.asarray(vza).reshape(1, -1)[0,:]
-        saa = np.asarray(saa).reshape(1, -1)[0,:]
-        vaa = np.asarray(vaa).reshape(1, -1)[0,:]
+        try:
+            if len(sza) == self.n_bands:
+                temp = [np.asarray(x).reshape(1, -1)[0,:] for x in sza]
+                sza = temp
+                temp = [np.asarray(x).reshape(1, -1)[0,:] for x in saa]
+                saa = temp
+                temp = [np.asarray(x).reshape(1, -1)[0,:] for x in vza]
+                vza = temp
+                temp = [np.asarray(x).reshape(1, -1)[0,:] for x in vaa]
+                vaa = temp
+            else:
+                sza = np.asarray(sza).reshape(1, -1)[0,:]
+                vza = np.asarray(vza).reshape(1, -1)[0,:]
+                saa = np.asarray(saa).reshape(1, -1)[0,:]
+                vaa = np.asarray(vaa).reshape(1, -1)[0,:]
+        except TypeError:
+            sza = np.asarray(sza).reshape(1, -1)[0,:]
+            vza = np.asarray(vza).reshape(1, -1)[0,:]
+            saa = np.asarray(saa).reshape(1, -1)[0,:]
+            vaa = np.asarray(vaa).reshape(1, -1)[0,:]
 
+        elevation = np.asarray(elevation).reshape(1, -1)[0,:]
         # the mother of all arrays will be 3*nbands+3+4
         n_pix1 = reflectance.shape[1]
         n_pix2 = atmosphere.shape[1]
