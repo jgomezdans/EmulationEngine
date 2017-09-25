@@ -412,6 +412,7 @@ class AtmosphericEmulationEngine(object):
                     else:
                         x[3] = saa*np.ones(n_pix)
                     x[-1, :] = reflectance[band, :]
+                    
                 H0_, dH_ = emu.predict(x, do_unc=False)
                 if not gradient_refl:
                     dH_ = dH_[:-1, :] # Ignore the SDR in the gradient 
