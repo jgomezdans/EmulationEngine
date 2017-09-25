@@ -123,6 +123,7 @@ class AtmosphericEmulationEngine(object):
             self.emulators.append ( cPickle.load(open(fich, 'r')))
             log.info("Found file %s, storing as %s" %
                         fich, emulator_file)
+        self.emulators = np.array(self.emulators).ravel()
         self.n_bands = len(self.emulators)
 
     def emulator_kernel_atmosphere(self, kernel_weights, atmosphere, 
@@ -259,7 +260,7 @@ class AtmosphericEmulationEngine(object):
         assert n_pix1 == n_pix2  # In reality could check angles and stuff
         n_pix = n_pix1 
         x = np.zeros((9, n_pix)) # 10 parameters innit?
-        x[1:, :] = np.c_[np.cos(sza)*np.ones(n_pix), 
+        x[:-1, :] = np.c_[np.cos(sza)*np.ones(n_pix), 
                          np.cos(vza)*np.ones(n_pix), 
                          saa*np.ones(n_pix), vaa*np.ones(n_pix), 
                          atmosphere[0,:], atmosphere[1,:], atmosphere[2,:], 
@@ -269,10 +270,10 @@ class AtmosphericEmulationEngine(object):
         if bands is None: # Do all bands
             for band in xrange(self.n_bands):
                 emu = self.emulators[band]
-                x[0, ] = reflectance[band, :]
+                x[-1, ] = reflectance[band, :]
                 H0_, dH_ = emu.predict(x, do_unc=False)
                 if not gradient_refl:
-                    dH_ = dH_[1:, :] # Ignore the SDR in the gradient 
+                    dH_ = dH_[:-1, :] # Ignore the SDR in the gradient 
                 H0.append(H0_)
                 dH.append(dH_)
                 
@@ -294,12 +295,12 @@ class AtmosphericEmulationEngine(object):
             for j, band in enumerate(the_bands):
                 emu = self.emulators[band]
                 if is_subset:
-                    x[0, :] = reflectance[j, :] 
+                    x[-1, :] = reflectance[j, :] 
                 else:
-                    x[0, :] = reflectance[band, :]
+                    x[-1, :] = reflectance[band, :]
                 H0_, dH_ = emu.predict(x, do_unc=False)
                 if not gradient_refl:
-                    dH_ = dH_[1:, :] # Ignore the SDR in the gradient 
+                    dH_ = dH_[:-1, :] # Ignore the SDR in the gradient 
                 H0.append(H0_)
                 dH.append(dH_)
         return H0, dH            
