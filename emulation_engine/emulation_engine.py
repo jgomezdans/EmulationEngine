@@ -408,9 +408,9 @@ class AtmosphericEmulationEngine(object):
                     else:
                         x[2] = saa*np.ones(n_pix)
                     if type(vaa) == list:
-                        x[3] = saa[band]*np.ones(n_pix)
+                        x[3] = vaa[band]*np.ones(n_pix)
                     else:
-                        x[3] = saa*np.ones(n_pix)
+                        x[3] = vaa*np.ones(n_pix)
                     x[-1, :] = reflectance[band, :]
                     
                 H0_, dH_ = emu.predict(x, do_unc=False)
