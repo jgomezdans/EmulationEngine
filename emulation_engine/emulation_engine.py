@@ -255,7 +255,7 @@ class AtmosphericEmulationEngine(object):
                     x[1, :] = kernel_weights[1, j, :] # Vol
                     x[2, :] = kernel_weights[2, j, :] # Geo                    
                 else:
-                     if type(sza) == list:
+                    if type(sza) == list:
                         x[3] = np.cos(sza[j])*np.ones(n_pix)
                     else:
                         x[3] = np.cos(sza)*np.ones(n_pix)
