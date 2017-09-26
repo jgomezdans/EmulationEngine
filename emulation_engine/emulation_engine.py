@@ -105,7 +105,7 @@ def extract_angles(angles):
     else:
         angles = np.asarray(angles).reshape(1, -1)[0,:]
         
-return angles
+    return angles
 
 
 class AtmosphericEmulationEngine(object):
@@ -204,9 +204,9 @@ class AtmosphericEmulationEngine(object):
                 else:
                     x[5] = saa*np.ones(n_pix)
                 if type(vaa) == list:
-                    x[6] = saa[band]*np.ones(n_pix)
+                    x[6] = vaa[band]*np.ones(n_pix)
                 else:
-                    x[6] = saa*np.ones(n_pix)
+                    x[6] = vaa*np.ones(n_pix)
 
                 x[0, :] = kernel_weights[0, band, :] # Iso
                 x[1, :] = kernel_weights[1, band, :] # Vol
@@ -247,9 +247,9 @@ class AtmosphericEmulationEngine(object):
                     else:
                         x[5] = saa*np.ones(n_pix)
                     if type(vaa) == list:
-                        x[6] = saa[j]*np.ones(n_pix)
+                        x[6] = vaa[j]*np.ones(n_pix)
                     else:
-                        x[6] = saa*np.ones(n_pix)
+                        x[6] = vaa*np.ones(n_pix)
 
                     x[0, :] = kernel_weights[0, j, :] # Iso
                     x[1, :] = kernel_weights[1, j, :] # Vol
@@ -268,9 +268,9 @@ class AtmosphericEmulationEngine(object):
                     else:
                         x[5] = saa*np.ones(n_pix)
                     if type(vaa) == list:
-                        x[6] = saa[band]*np.ones(n_pix)
+                        x[6] = vaa[band]*np.ones(n_pix)
                     else:
-                        x[6] = saa*np.ones(n_pix)
+                        x[6] = vaa*np.ones(n_pix)
 
                     x[0, :] = kernel_weights[0, band, :] # Iso
                     x[1, :] = kernel_weights[1, band, :] # Vol
@@ -348,9 +348,9 @@ class AtmosphericEmulationEngine(object):
                 else:
                     x[2] = saa*np.ones(n_pix)
                 if type(vaa) == list:
-                    x[3] = saa[band]*np.ones(n_pix)
+                    x[3] = vaa[band]*np.ones(n_pix)
                 else:
-                    x[3] = saa*np.ones(n_pix)
+                    x[3] = vaa*np.ones(n_pix)
 
                 x[-1, ] = reflectance[band, :]
                 H0_, dH_ = emu.predict(x, do_unc=False)
@@ -390,9 +390,9 @@ class AtmosphericEmulationEngine(object):
                     else:
                         x[2] = saa*np.ones(n_pix)
                     if type(vaa) == list:
-                        x[3] = saa[band]*np.ones(n_pix)
+                        x[3] = vaa[band]*np.ones(n_pix)
                     else:
-                        x[3] = saa*np.ones(n_pix)
+                        x[3] = vaa*np.ones(n_pix)
                     x[-1, :] = reflectance[j, :] 
                 else:
                     if type(sza) == list:
