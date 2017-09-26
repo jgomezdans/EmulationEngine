@@ -27,7 +27,7 @@ import os
 import glob
 import sys
 import cPickle
-
+import logging as log
 import numpy as np
 
 import gp_emulator # unnecessary?
@@ -275,7 +275,7 @@ class AtmosphericEmulationEngine(object):
                     x[0, :] = kernel_weights[0, band, :] # Iso
                     x[1, :] = kernel_weights[1, band, :] # Vol
                     x[2, :] = kernel_weights[2, band, :] # Geo
-                H0_, dH_ = emu.predict(x, do_unc=False)
+                H0_, dH_ = emu.predict(x.T, do_unc=False)
                 if not gradient_kernels:
                     dH_ = dH_[3:, :] # Ignore the kernels in the gradient 
                 H0.append(H0_)
@@ -353,7 +353,7 @@ class AtmosphericEmulationEngine(object):
                     x[3] = vaa*np.ones(n_pix)
 
                 x[-1, ] = reflectance[band, :]
-                H0_, dH_ = emu.predict(x, do_unc=False)
+                H0_, dH_ = emu.predict(x.T, do_unc=False)
                 if not gradient_refl:
                     dH_ = dH_[:-1, :] # Ignore the SDR in the gradient 
                 H0.append(H0_)
@@ -413,7 +413,7 @@ class AtmosphericEmulationEngine(object):
                         x[3] = vaa*np.ones(n_pix)
                     x[-1, :] = reflectance[band, :]
                     
-                H0_, dH_ = emu.predict(x, do_unc=False)
+                H0_, dH_ = emu.predict(x.T, do_unc=False)
                 if not gradient_refl:
                     dH_ = dH_[:-1, :] # Ignore the SDR in the gradient 
                 H0.append(H0_)
