@@ -136,7 +136,7 @@ class AtmosphericEmulationEngine(object):
             self.emulator_names = emulator_file
             self.emulators.append ( cPickle.load(open(fich, 'r')))
             log.info("Found file %s, storing as %s" %
-                        fich, emulator_file)
+                        (fich, emulator_file))
         self.emulators = np.array(self.emulators).ravel()
         self.n_bands = len(self.emulators)
 
