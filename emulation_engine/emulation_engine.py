@@ -106,15 +106,16 @@ class AtmosphericEmulationEngine(object):
     7. Ozone concentration (in 6S units, cm-atm)
     8. Altitude (in km)
     """
-    def __init__ ( self, sensor, emulator_folder):
+    def __init__ ( self, sensor, emulator_folder, emu_type="isotropic"):
         self.sensor = sensor
+	self.emu_type = emu_type
         self._locate_emulators(sensor, emulator_folder)
 
     def _locate_emulators(self, sensor, emulator_folder):
         self.emulators = []
         self.emulator_names = []
         files = glob.glob(os.path.join(emulator_folder, 
-                "*%s*.pkl" % sensor))
+                "%s*%s*.pkl" % (self.emu_type, sensor)))
         files.sort()
         for fich in files:
             emulator_file = os.path.basename(fich)
@@ -122,7 +123,7 @@ class AtmosphericEmulationEngine(object):
             self.emulator_names = emulator_file
             self.emulators.append ( cPickle.load(open(fich, 'r')))
             log.info("Found file %s, storing as %s" %
-                        fich, emulator_file)
+                        (fich, emulator_file))
         self.emulators = np.array(self.emulators).ravel()
         self.n_bands = len(self.emulators)
 
